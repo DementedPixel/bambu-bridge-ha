@@ -1,0 +1,38 @@
+name: Bambu Lab MQTT Bridge
+version: 1.0.0
+slug: bambu-bridge
+description: >-
+  MQTT bridge for Bambu Lab printers. Solves the single-client limitation
+  by republishing all printer MQTT traffic to your local broker.
+  Auto-discovers printer entities in Home Assistant via MQTT Discovery.
+url: 'https://github.com/DementedPixel/bambu-bridge-ha'
+arch:
+  - amd64
+  - aarch64
+  - armv7
+startup: services
+boot: auto
+init: false
+services:
+  - mqtt:need
+hassio_api: true
+options:
+  printers:
+    - name: "My Printer"
+      ip: ""
+      serial: ""
+      access_code: ""
+      camera_enabled: true
+  discovery_prefix: homeassistant
+  camera_interval: 5
+  log_level: info
+schema:
+  printers:
+    - name: str
+      ip: str
+      serial: str
+      access_code: password
+      camera_enabled: bool
+  discovery_prefix: str
+  camera_interval: "int(1,60)"
+  log_level: "list(debug|info|warning|error)"

@@ -1,0 +1,67 @@
+#!/usr/bin/with-contenv bashio
+
+bashio::log.info "Starting Bambu Lab MQTT Bridge..."
+
+# ---------------------------------------------------------------------------
+# MQTT broker discovery via Supervisor API
+# ---------------------------------------------------------------------------
+if bashio::services.available "mqtt"; then
+    MQTT_HOST=$(bashio::services mqtt "host")
+    MQTT_PORT=$(bashio::services mqtt "port")
+    MQTT_USER=$(bashio::services mqtt "username")
+    MQTT_PASS=$(bashio::services mqtt "password")
+    MQTT_SSL=$(bashio::services mqtt "ssl")
+
+    bashio::log.info "MQTT broker: ${MQTT_HOST}:${MQTT_PORT} (user: ${MQTT_USER})"
+
+    # URL-encode password to handle special characters (@, :, /, #, etc.)
+    MQTT_PASS_ENCODED=$(printf '%s' "${MQTT_PASS}" | jq -sRr @uri)
+
+    if bashio::var.true "${MQTT_SSL}"; then
+        export MOSQUITTO_URL="mqtts://${MQTT_USER}:${MQTT_PASS_ENCODED}@${MQTT_HOST}:${MQTT_PORT}"
+    else
+        export MOSQUITTO_URL="mqtt://${MQTT_USER}:${MQTT_PASS_ENCODED}@${MQTT_HOST}:${MQTT_PORT}"
+    fi
+else
+    bashio::log.fatal \
+        "No MQTT service available. Please install and start the Mosquitto broker add-on."
+    exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Generate printers.json from HA options
+# ---------------------------------------------------------------------------
+bashio::log.info "Generating printer configuration..."
+
+# Transform HA options format (snake_case access_code) to bridge format (camelCase accessCode)
+jq '[.printers[] | {name, ip, serial, accessCode: .access_code}]' \
+    /data/options.json > /data/printers.json
+
+PRINTER_COUNT=$(jq '.printers | length' /data/options.json)
+bashio::log.info "Configured ${PRINTER_COUNT} printer(s)"
+
+export PRINTERS_CONFIG="/data/printers.json"
+
+# ---------------------------------------------------------------------------
+# Bridge configuration from HA options
+# ---------------------------------------------------------------------------
+export HA_DISCOVERY="true"
+export HA_DISCOVERY_PREFIX=$(bashio::config 'discovery_prefix')
+export CAMERA_INTERVAL=$(bashio::config 'camera_interval')
+
+# If all printers have camera disabled, set interval to 0
+ANY_CAMERA=$(jq '[.printers[].camera_enabled] | any' /data/options.json)
+if bashio::var.false "${ANY_CAMERA}"; then
+    export CAMERA_INTERVAL=0
+    bashio::log.info "All cameras disabled"
+fi
+
+bashio::log.info "Discovery prefix: ${HA_DISCOVERY_PREFIX}"
+bashio::log.info "Camera interval: ${CAMERA_INTERVAL}s"
+bashio::log.info "Log level: $(bashio::config 'log_level')"
+
+# ---------------------------------------------------------------------------
+# Launch the bridge
+# ---------------------------------------------------------------------------
+cd /usr/bin
+exec npx tsx bridge.ts

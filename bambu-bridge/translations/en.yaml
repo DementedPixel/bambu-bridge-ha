@@ -1,0 +1,49 @@
+configuration:
+  printers:
+    name: Printers
+    description: >-
+      Add each Bambu Lab printer you want to bridge. Find the serial number
+      and access code in BambuStudio (Device > Connection) or on the printer's
+      touchscreen under Settings > Network.
+  printers.name:
+    name: Printer Name
+    description: >-
+      A friendly name for this printer (e.g. "Workshop Printer"). This name
+      appears in Home Assistant device names.
+  printers.ip:
+    name: IP Address
+    description: >-
+      The local IP address of the printer (e.g. 192.168.1.100). The printer
+      must be on the same network as your Home Assistant instance.
+  printers.serial:
+    name: Serial Number
+    description: >-
+      The printer's serial number. Found in BambuStudio under Device info
+      or on the printer's touchscreen under Settings > Device Info.
+  printers.access_code:
+    name: Access Code
+    description: >-
+      The printer's LAN access code (8 digits). Found in BambuStudio under
+      Device > Connection, or on the printer's touchscreen under
+      Settings > Network > LAN Only Mode.
+  printers.camera_enabled:
+    name: Camera Enabled
+    description: >-
+      Enable periodic camera snapshot capture for this printer. Snapshots
+      appear as a camera entity in Home Assistant.
+  discovery_prefix:
+    name: Discovery Prefix
+    description: >-
+      MQTT Discovery prefix used by Home Assistant. Only change this if you
+      have customised it in your MQTT integration settings. Default is
+      'homeassistant'.
+  camera_interval:
+    name: Camera Snapshot Interval (seconds)
+    description: >-
+      How often to capture camera snapshots in seconds. Lower values give
+      more responsive camera feeds but increase network traffic. Each snapshot
+      is approximately 100-200 KB.
+  log_level:
+    name: Log Level
+    description: >-
+      Logging verbosity. Use 'debug' for troubleshooting connection issues.

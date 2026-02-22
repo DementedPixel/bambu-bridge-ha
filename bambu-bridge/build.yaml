@@ -1,0 +1,9 @@
+build_from:
+  amd64: ghcr.io/home-assistant/amd64-base:3.21
+  aarch64: ghcr.io/home-assistant/aarch64-base:3.21
+  armv7: ghcr.io/home-assistant/armv7-base:3.21
+labels:
+  org.opencontainers.image.title: "Bambu Lab MQTT Bridge"
+  org.opencontainers.image.description: "MQTT bridge for Bambu Lab printers with HA auto-discovery"
+  org.opencontainers.image.source: "https://github.com/DementedPixel/bambu-bridge-ha"
+  org.opencontainers.image.authors: "Interzone Foundry"
