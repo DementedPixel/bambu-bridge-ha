@@ -50,7 +50,8 @@ export HA_DISCOVERY_PREFIX=$(bashio::config 'discovery_prefix')
 export CAMERA_INTERVAL=$(bashio::config 'camera_interval')
 
 # If all printers have camera disabled, set interval to 0
-ANY_CAMERA=$(jq '[.printers[].camera_enabled] | any' /data/options.json)
+# camera_enabled defaults to true when not specified
+ANY_CAMERA=$(jq '[.printers[] | .camera_enabled // true] | any' /data/options.json)
 if bashio::var.false "${ANY_CAMERA}"; then
     export CAMERA_INTERVAL=0
     bashio::log.info "All cameras disabled"

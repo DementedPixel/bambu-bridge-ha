@@ -1,5 +1,5 @@
 name: Bambu Lab MQTT Bridge
-version: 1.0.0
+version: 1.0.1
 slug: bambu-bridge
 description: >-
   MQTT bridge for Bambu Lab printers. Solves the single-client limitation
@@ -31,7 +31,7 @@ schema:
       ip: str
       serial: str
       access_code: password
-      camera_enabled: bool
+      camera_enabled: "bool?"
   discovery_prefix: str
   camera_interval: "int(1,60)"
   log_level: "list(debug|info|warning|error)"
