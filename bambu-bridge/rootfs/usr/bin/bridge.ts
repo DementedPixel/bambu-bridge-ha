@@ -134,9 +134,21 @@ function bridgePrinter(config: PrinterConfig): void {
   let lastPushAllTime = 0;
   let cachedState: Record<string, unknown> = {};
 
+  // --- Startup validation: warn if printer doesn't connect within 30s ---
+  const startupTimer = setTimeout(() => {
+    if (!printerConnected) {
+      console.warn(`[${config.name}] Printer at ${config.ip} did not respond within 30s.`);
+      console.warn(`[${config.name}]   - Is the printer powered on and on the network?`);
+      console.warn(`[${config.name}]   - Is LAN Mode enabled in the printer's network settings?`);
+      console.warn(`[${config.name}]   - Is the IP address correct?`);
+      console.warn(`[${config.name}]   - Is BambuStudio connected directly? (It must use the MQTT broker instead to avoid kicking the bridge.)`);
+    }
+  }, 30000);
+
   // --- Printer events ---
   printerClient.on('connect', () => {
     printerConnected = true;
+    clearTimeout(startupTimer);
     resetBackoff(printerClient, printerBackoff);
     console.log(`[${config.name}] Connected to printer ${config.ip}`);
 
