@@ -22,13 +22,6 @@ export interface PrinterBridge {
 // Speed profile mapping
 // ---------------------------------------------------------------------------
 
-const SPEED_NAMES: Record<number, string> = {
-  1: 'Silent',
-  2: 'Standard',
-  3: 'Sport',
-  4: 'Ludicrous',
-};
-
 const SPEED_VALUES: Record<string, string> = {
   Silent: '1',
   Standard: '2',
