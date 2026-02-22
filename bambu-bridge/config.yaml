@@ -6,6 +6,7 @@ description: >-
   by republishing all printer MQTT traffic to your local broker.
   Auto-discovers printer entities in Home Assistant via MQTT Discovery.
 url: 'https://github.com/DementedPixel/bambu-bridge-ha'
+image: 'ghcr.io/dementedpixel/bambu-bridge-{arch}'
 arch:
   - amd64
   - aarch64
