@@ -27,6 +27,39 @@ import { startCamera, stopAllCameras } from './camera.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// ---------------------------------------------------------------------------
+// Exponential backoff for reconnections (1s → 30s cap, ±25% jitter)
+// ---------------------------------------------------------------------------
+
+interface BackoffState {
+  delay: number;
+  readonly initial: number;
+  readonly max: number;
+}
+
+function createBackoff(initial = 1000, max = 30000): BackoffState {
+  return { delay: initial, initial, max };
+}
+
+/** Doubles the delay (up to max) and applies jitter. Call on 'reconnect'. */
+function advanceBackoff(
+  client: mqtt.MqttClient,
+  backoff: BackoffState,
+  label: string,
+): void {
+  backoff.delay = Math.min(backoff.delay * 2, backoff.max);
+  const jitter = backoff.delay * 0.25 * (Math.random() * 2 - 1);
+  const next = Math.max(1000, Math.round(backoff.delay + jitter));
+  client.options.reconnectPeriod = next;
+  console.log(`[${label}] Next reconnect in ${(next / 1000).toFixed(1)}s`);
+}
+
+/** Resets delay back to initial value. Call on 'connect'. */
+function resetBackoff(client: mqtt.MqttClient, backoff: BackoffState): void {
+  backoff.delay = backoff.initial;
+  client.options.reconnectPeriod = backoff.initial;
+}
+
 interface PrinterConfig {
   name: string;
   ip: string;
@@ -62,6 +95,9 @@ function bridgePrinter(config: PrinterConfig): void {
 
   console.log(`[${config.name}] Starting bridge for ${config.ip} (${config.serial})`);
 
+  const printerBackoff = createBackoff(1000, 30000);
+  const mosqBackoff = createBackoff(1000, 30000);
+
   // --- Printer-side connection (mqtts, TLS, auth) ---
   const printerClient = mqtt.connect({
     host: config.ip,
@@ -70,14 +106,14 @@ function bridgePrinter(config: PrinterConfig): void {
     username: 'bblp',
     password: config.accessCode,
     rejectUnauthorized: false,
-    reconnectPeriod: 5000,
+    reconnectPeriod: 1000,
     connectTimeout: 10000,
   });
 
   // --- Mosquitto-side connection (mqtt, plain, no auth) ---
   const mosqClient = mqtt.connect(MOSQUITTO_URL, {
     clientId: `bridge-${config.serial}-${Date.now()}`,
-    reconnectPeriod: 5000,
+    reconnectPeriod: 1000,
     connectTimeout: 5000,
     will: HA_DISCOVERY
       ? {
@@ -97,6 +133,7 @@ function bridgePrinter(config: PrinterConfig): void {
   // --- Printer events ---
   printerClient.on('connect', () => {
     printerConnected = true;
+    resetBackoff(printerClient, printerBackoff);
     console.log(`[${config.name}] Connected to printer ${config.ip}`);
 
     if (HA_DISCOVERY && mosqConnected) {
@@ -148,12 +185,13 @@ function bridgePrinter(config: PrinterConfig): void {
   });
 
   printerClient.on('reconnect', () => {
-    console.log(`[${config.name}] Reconnecting to printer...`);
+    advanceBackoff(printerClient, printerBackoff, `${config.name} printer`);
   });
 
   // --- Mosquitto events ---
   mosqClient.on('connect', () => {
     mosqConnected = true;
+    resetBackoff(mosqClient, mosqBackoff);
     console.log(`[${config.name}] Connected to Mosquitto`);
 
     mosqClient.subscribe(requestTopic, (err) => {
@@ -222,6 +260,10 @@ function bridgePrinter(config: PrinterConfig): void {
 
   mosqClient.on('error', (err) => {
     console.error(`[${config.name}] Mosquitto error:`, err.message);
+  });
+
+  mosqClient.on('reconnect', () => {
+    advanceBackoff(mosqClient, mosqBackoff, `${config.name} Mosquitto`);
   });
 
   mosqClient.on('close', () => {
