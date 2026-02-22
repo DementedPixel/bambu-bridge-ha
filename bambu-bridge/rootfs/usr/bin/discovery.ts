@@ -509,8 +509,11 @@ export function subscribeHATopics(
 }
 
 // ---------------------------------------------------------------------------
-// Command routing (HA → Bambu)
+// Command routing (HA → Bambu) with per-command debounce
 // ---------------------------------------------------------------------------
+
+const COMMAND_COOLDOWN_MS = 2000;
+const lastCommandTime = new Map<string, number>();
 
 export function handleHACommand(
   topic: string,
@@ -521,6 +524,16 @@ export function handleHACommand(
   if (!topic.startsWith(prefix)) return null;
 
   const command = topic.slice(prefix.length);
+
+  // Debounce: suppress duplicate commands within cooldown
+  const key = `${serial}:${command}`;
+  const now = Date.now();
+  const last = lastCommandTime.get(key) || 0;
+  if (now - last < COMMAND_COOLDOWN_MS) {
+    console.log(`[${serial}] Command '${command}' debounced (${now - last}ms since last)`);
+    return null;
+  }
+  lastCommandTime.set(key, now);
   const msg = payload.toString().trim();
 
   switch (command) {
