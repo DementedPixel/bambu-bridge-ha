@@ -478,7 +478,7 @@ export function handleReport(
     mosqClient.publish(
       `bambu_bridge/${serial}/state`,
       JSON.stringify(newState),
-      { qos: 0 },
+      { qos: 1 },
     );
 
     return newState;
