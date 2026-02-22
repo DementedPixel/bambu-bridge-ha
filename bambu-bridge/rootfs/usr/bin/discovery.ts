@@ -40,7 +40,7 @@ function buildDiscoveryPayload(printer: PrinterBridge): object {
   const stateTopic = `bambu_bridge/${serial}/state`;
   const cmdBase = `bambu_bridge/${serial}/command`;
 
-  return {
+  const payload = {
     dev: {
       ids: [uid],
       name: printer.name,
@@ -312,6 +312,17 @@ function buildDiscoveryPayload(printer: PrinterBridge): object {
       ...buildAmsTrayEntities(uid, stateTopic),
     },
   };
+
+  // Add expire_after to all sensors and binary sensors so they go
+  // unavailable in HA after 2 minutes of no state updates.
+  const cmps = payload.cmps as Record<string, Record<string, unknown>>;
+  for (const cmp of Object.values(cmps)) {
+    if (cmp.p === 'sensor' || cmp.p === 'binary_sensor') {
+      cmp.exp_aft = 120;
+    }
+  }
+
+  return payload;
 }
 
 function buildAmsTrayEntities(uid: string, stateTopic: string): Record<string, object> {
