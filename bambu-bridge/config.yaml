@@ -10,9 +10,7 @@ image: 'ghcr.io/dementedpixel/bambu-bridge-{arch}'
 arch:
   - amd64
   - aarch64
-  - armv7
 startup: services
-boot: auto
 init: false
 services:
   - mqtt:need
