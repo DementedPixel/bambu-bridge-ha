@@ -65,10 +65,10 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: home-assistant/builder@master
         with:
-          args: --${{ matrix.architecture }} --target /data/bambu-bridge --image "ghcr.io/${{ github.repository_owner }}/bambu-bridge-{arch}" --docker-hub-check
+          args: --${{ matrix.architecture }} --target /data/bambu-bridge --no-cache --docker-hub-check
 
       - name: Build add-on (test only)
         if: github.event_name == 'pull_request'
         uses: home-assistant/builder@master
         with:
-          args: --test --${{ matrix.architecture }} --target /data/bambu-bridge --image "ghcr.io/${{ github.repository_owner }}/bambu-bridge-{arch}" --docker-hub-check
+          args: --test --${{ matrix.architecture }} --target /data/bambu-bridge --no-cache --docker-hub-check
