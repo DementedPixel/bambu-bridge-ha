@@ -16,6 +16,7 @@ export interface PrinterBridge {
   serial: string;
   name: string;
   ip: string;
+  model?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ function buildDiscoveryPayload(printer: PrinterBridge): object {
       ids: [uid],
       name: printer.name,
       mf: 'Bambu Lab',
+      mdl: printer.model || undefined,
       sn: serial,
       sw: BRIDGE_VERSION,
       cu: `http://${printer.ip}`,

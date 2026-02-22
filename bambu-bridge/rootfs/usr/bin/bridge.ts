@@ -32,6 +32,7 @@ interface PrinterConfig {
   ip: string;
   serial: string;
   accessCode: string;
+  model?: string;
 }
 
 function loadPrinters(): PrinterConfig[] {
@@ -166,7 +167,7 @@ function bridgePrinter(config: PrinterConfig): void {
     if (HA_DISCOVERY) {
       publishDiscovery(
         mosqClient,
-        { serial: config.serial, name: config.name, ip: config.ip },
+        { serial: config.serial, name: config.name, ip: config.ip, model: config.model },
         HA_DISCOVERY_PREFIX,
       );
 
@@ -213,7 +214,7 @@ function bridgePrinter(config: PrinterConfig): void {
       console.log(`[${config.name}] HA came online, re-publishing discovery`);
       publishDiscovery(
         mosqClient,
-        { serial: config.serial, name: config.name, ip: config.ip },
+        { serial: config.serial, name: config.name, ip: config.ip, model: config.model },
         HA_DISCOVERY_PREFIX,
       );
     }

@@ -10,6 +10,11 @@ configuration:
     description: >-
       A friendly name for this printer (e.g. "Workshop Printer"). This name
       appears in Home Assistant device names.
+  printers.model:
+    name: Printer Model
+    description: >-
+      The printer model (e.g. A1, A1 Mini, P1S, X1C). Shown in the Home
+      Assistant device info. Optional.
   printers.ip:
     name: IP Address
     description: >-

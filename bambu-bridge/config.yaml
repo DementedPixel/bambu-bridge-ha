@@ -1,5 +1,5 @@
 name: Bambu Lab MQTT Bridge
-version: 1.0.1
+version: 1.0.2
 slug: bambu-bridge
 description: >-
   MQTT bridge for Bambu Lab printers. Solves the single-client limitation
@@ -18,6 +18,7 @@ hassio_api: true
 options:
   printers:
     - name: "My Printer"
+      model: "A1"
       ip: ""
       serial: ""
       access_code: ""
@@ -28,6 +29,7 @@ options:
 schema:
   printers:
     - name: str
+      model: "str?"
       ip: str
       serial: str
       access_code: password
