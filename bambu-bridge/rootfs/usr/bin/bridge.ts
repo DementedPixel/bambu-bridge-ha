@@ -23,7 +23,7 @@ import {
   subscribeHATopics,
   handleHACommand,
 } from './discovery.js';
-import { startCamera, stopAllCameras } from './camera.js';
+import { startCamera, setCameraInterval, stopAllCameras } from './camera.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -66,6 +66,7 @@ interface PrinterConfig {
   serial: string;
   accessCode: string;
   model?: string;
+  camera_enabled?: boolean;
 }
 
 function loadPrinters(): PrinterConfig[] {
@@ -88,6 +89,9 @@ const MOSQUITTO_URL = process.env.MOSQUITTO_URL || 'mqtt://localhost:1883';
 const HA_DISCOVERY = (process.env.HA_DISCOVERY || 'true') !== 'false';
 const HA_DISCOVERY_PREFIX = process.env.HA_DISCOVERY_PREFIX || 'homeassistant';
 const CAMERA_INTERVAL = parseInt(process.env.CAMERA_INTERVAL || '5', 10);
+const CAMERA_IDLE_INTERVAL = parseInt(process.env.CAMERA_IDLE_INTERVAL || '60', 10);
+
+const PRINTING_STATES = new Set(['RUNNING', 'PREPARE', 'SLICING']);
 
 function bridgePrinter(config: PrinterConfig): void {
   const reportTopic = `device/${config.serial}/report`;
@@ -166,7 +170,19 @@ function bridgePrinter(config: PrinterConfig): void {
       mosqClient.publish(reportTopic, payload, { qos: 0 });
 
       if (HA_DISCOVERY) {
+        const prevState = cachedState.gcode_state as string | undefined;
         cachedState = handleReport(mosqClient, config.serial, payload, cachedState);
+        const newState = cachedState.gcode_state as string | undefined;
+
+        if (newState && newState !== prevState && config.camera_enabled !== false && CAMERA_INTERVAL > 0) {
+          const wasPrinting = prevState ? PRINTING_STATES.has(prevState) : false;
+          const isPrinting = PRINTING_STATES.has(newState);
+          if (isPrinting && !wasPrinting) {
+            setCameraInterval(config.serial, CAMERA_INTERVAL);
+          } else if (!isPrinting && wasPrinting) {
+            setCameraInterval(config.serial, CAMERA_IDLE_INTERVAL);
+          }
+        }
       }
     }
   });
@@ -216,11 +232,12 @@ function bridgePrinter(config: PrinterConfig): void {
       }
     }
 
-    if (CAMERA_INTERVAL > 0) {
+    if (CAMERA_INTERVAL > 0 && config.camera_enabled !== false) {
+      const isPrinting = PRINTING_STATES.has(cachedState.gcode_state as string || '');
       startCamera(
         mosqClient,
         { ip: config.ip, serial: config.serial, accessCode: config.accessCode },
-        CAMERA_INTERVAL,
+        isPrinting ? CAMERA_INTERVAL : CAMERA_IDLE_INTERVAL,
       );
     }
   });

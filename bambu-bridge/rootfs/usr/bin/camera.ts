@@ -23,6 +23,7 @@ interface CachedSnapshot {
 const CACHE_TTL_MS = 2000;
 const snapshotCache = new Map<string, CachedSnapshot>();
 const activeTimers = new Map<string, ReturnType<typeof setInterval>>();
+const activeCaptures = new Map<string, () => void>();
 
 // ---------------------------------------------------------------------------
 // Raw snapshot capture (TLS port 6000)
@@ -144,7 +145,20 @@ export function startCamera(
   capture();
   const timer = setInterval(capture, intervalSeconds * 1000);
   activeTimers.set(config.serial, timer);
+  activeCaptures.set(config.serial, capture);
   console.log(`[${config.serial}] Camera started (every ${intervalSeconds}s)`);
+}
+
+export function setCameraInterval(serial: string, newSeconds: number): void {
+  const capture = activeCaptures.get(serial);
+  if (!capture) return; // camera not running for this printer
+
+  const existing = activeTimers.get(serial);
+  if (existing) clearInterval(existing);
+
+  const timer = setInterval(capture, newSeconds * 1000);
+  activeTimers.set(serial, timer);
+  console.log(`[${serial}] Camera interval → ${newSeconds}s`);
 }
 
 export function stopCamera(serial: string): void {
@@ -152,6 +166,7 @@ export function stopCamera(serial: string): void {
   if (timer) {
     clearInterval(timer);
     activeTimers.delete(serial);
+    activeCaptures.delete(serial);
     snapshotCache.delete(serial);
     console.log(`[${serial}] Camera stopped`);
   }

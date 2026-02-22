@@ -34,7 +34,7 @@ fi
 bashio::log.info "Generating printer configuration..."
 
 # Transform HA options format (snake_case access_code) to bridge format (camelCase accessCode)
-jq '[.printers[] | {name, model: (.model // null), ip, serial, accessCode: .access_code}]' \
+jq '[.printers[] | {name, model: (.model // null), ip, serial, accessCode: .access_code, camera_enabled: (.camera_enabled // true)}]' \
     /data/options.json > /data/printers.json
 
 PRINTER_COUNT=$(jq '.printers | length' /data/options.json)
