@@ -10,21 +10,12 @@ on:
     branches:
       - master
 
-env:
-  BUILD_ARGS: "--test"
-
 jobs:
   info:
     name: Gather add-on info
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.info.outputs.architectures }}
-      build: ${{ steps.info.outputs.build }}
-      description: ${{ steps.info.outputs.description }}
-      name: ${{ steps.info.outputs.name }}
-      slug: ${{ steps.info.outputs.slug }}
-      target: ${{ steps.info.outputs.target }}
-      version: ${{ steps.info.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,12 +62,7 @@ jobs:
       - name: Build add-on
         uses: home-assistant/builder@master
         with:
-          args: |
-            ${{ env.BUILD_ARGS }}
-            --${{ matrix.architecture }}
-            --target /data/bambu-bridge
-            --image "ghcr.io/${{ github.repository_owner }}/bambu-bridge-{arch}"
-            --docker-hub-check
+          args: --test --${{ matrix.architecture }} --target /data/bambu-bridge --image "ghcr.io/${{ github.repository_owner }}/bambu-bridge-{arch}" --docker-hub-check
 
   publish:
     name: Publish release
@@ -98,7 +84,4 @@ jobs:
       - name: Publish add-on images
         uses: home-assistant/builder@master
         with:
-          args: |
-            --all
-            --target /data/bambu-bridge
-            --image "ghcr.io/${{ github.repository_owner }}/bambu-bridge-{arch}"
+          args: --all --target /data/bambu-bridge --image "ghcr.io/${{ github.repository_owner }}/bambu-bridge-{arch}"
