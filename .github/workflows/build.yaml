@@ -3,12 +3,12 @@ name: Build Add-on
 on:
   push:
     branches:
-      - main
+      - master
     tags:
       - "v*"
   pull_request:
     branches:
-      - main
+      - master
 
 env:
   BUILD_ARGS: "--test"
