@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.3] - 2025-02-22
+## [1.0.3] - 2026-02-22
 
 ### Added
 
@@ -8,7 +8,7 @@
 - Real-time WebSocket updates, camera feeds, and printer status all available through ingress
 - Dashboard works behind HA's ingress proxy with correct path handling
 
-## [1.0.2] - 2025-02-22
+## [1.0.2] - 2026-02-22
 
 ### Added
 
@@ -21,14 +21,14 @@
 - 2s command debounce to prevent rapid-fire duplicates
 - Startup warning if printer doesn't respond within 30s
 
-## [1.0.1] - 2025-02-22
+## [1.0.1] - 2026-02-22
 
 ### Fixed
 
 - Made `camera_enabled` optional in config schema (was blocking config save)
 - Removed deprecated armv7 architecture
 
-## [1.0.0] - 2025-02-22
+## [1.0.0] - 2026-02-22
 
 ### Added
 
